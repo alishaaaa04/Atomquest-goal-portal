@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">My Goal Sheet</div>
+<div class="page-sub">Create and manage your goals for FY 2025–26 · Phase 1 Open</div>
+
+{% if sheet %}
+<!-- WEIGHTAGE STATUS BAR -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+    <div>
+      <span style="font-family:'Syne',sans-serif;font-weight:700;">Total Weightage</span>
+      <span style="font-size:0.8rem;color:var(--muted);margin-left:0.5rem;">(Must equal 100%)</span>
+    </div>
+    <div>
+      <span style="font-size:1.5rem;font-family:'Syne',sans-serif;font-weight:800;
+        color:{% if total_w == 100 %}var(--green){% elif total_w > 100 %}var(--danger){% else %}var(--accent){% endif %}">
+        {{ total_w }}%
+      </span>
+      <span style="color:var(--muted);font-size:0.85rem;"> / 100%</span>
+    </div>
+  </div>
+  <div class="progress-wrap" style="height:10px;">
+    <div class="progress-fill {% if total_w == 100 %}fill-green{% elif total_w > 100 %}fill-red{% else %}fill-blue{% endif %}"
+         style="width:{{ [total_w, 100]|min }}%"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-top:0.5rem;font-size:0.75rem;color:var(--muted);">
+    <span>Goals: {{ sheet.goals|length }}/8</span>
+    <span>Remaining: {{ 100 - total_w }}%</span>
+  </div>
+</div>
+
+<!-- GOALS LIST -->
+{% for g in sheet.goals %}
+<div class="card" style="margin-bottom:1rem;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+    <div style="flex:1;">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+        <span class="tag">{{ g.thrust }}</span>
+        <span class="pill {% if g.status == 'On Track' %}pill-on-track{% elif g.status == 'Completed' %}pill-completed{% else %}pill-not-started{% endif %}">{{ g.status }}</span>
+        {% if sheet.sheet_status == 'approved' %}<span class="pill" style="background:rgba(255,123,71,0.1);color:var(--warn);">🔒 Locked</span>{% endif %}
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.3rem;">{{ g.title }}</div>
+      <div style="font-size:0.83rem;color:var(--muted);margin-bottom:0.75rem;">{{ g.description }}</div>
+      <div style="display:flex;gap:2rem;font-size:0.82rem;">
+        <div><span style="color:var(--muted);">Target: </span><strong>{{ g.target }}</strong></div>
+        <div><span style="color:var(--muted);">UoM: </span><strong>{{ g.uom|upper }}</strong></div>
+        <div><span style="color:var(--muted);">Weightage: </span><strong style="color:var(--accent);">{{ g.weightage }}%</strong></div>
+        <div><span style="color:var(--muted);">Q2 Actual: </span><strong style="color:var(--accent2);">{{ g.q2 }}</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- ADD GOAL FORM -->
+{% if sheet.sheet_status == 'draft' and sheet.goals|length < 8 %}
+<details style="margin-top:1.5rem;">
+  <summary>
+    <span class="btn btn-primary">+ Add New Goal</span>
+  </summary>
+  <div class="card" style="margin-top:1rem;">
+    <div class="card-title">Add Goal</div>
+    <form method="POST" action="/goals/add">
+      <div class="grid2">
+        <div class="form-group">
+          <label>Thrust Area</label>
+          <select name="thrust" required>
+            {% for t in thrust_areas %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Unit of Measurement</label>
+          <select name="uom" required>
+            <option value="min">Min (Higher is better) — e.g. Revenue</option>
+            <option value="max">Max (Lower is better) — e.g. TAT, Cost</option>
+            <option value="zero">Zero-based — e.g. Incidents</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Goal Title</label>
+        <input type="text" name="title" placeholder="e.g. Increase Q3 Sales Revenue" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" placeholder="Brief description of what you aim to achieve..."></textarea>
+      </div>
+      <div class="grid2">
+        <div class="form-group">
+          <label>Target Value</label>
+          <input type="number" name="target" placeholder="e.g. 5000000" required min="0">
+        </div>
+        <div class="form-group">
+          <label>Weightage (%) — Min 10%, Remaining: {{ 100 - total_w }}%</label>
+          <input type="number" name="weightage" placeholder="e.g. 20" min="10" max="{{ 100 - total_w }}" required
+                 oninput="updateBar(this.value)">
+          <div id="wbar-wrap"><div id="wbar" style="width:{{ total_w }}%"></div></div>
+          <div id="wlabel">Current total: {{ total_w }}% + new → <span id="preview">{{ total_w }}%</span></div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-success">Add Goal ✓</button>
+    </form>
+  </div>
+</details>
+{% endif %}
+
+<!-- SUBMIT BUTTON -->
+{% if sheet.sheet_status == 'draft' %}
+<div style="margin-top:1.5rem;display:flex;align-items:center;gap:1rem;">
+  <form method="POST" action="/goals/submit">
+    <button class="btn btn-primary {% if total_w != 100 %}btn-outline{% endif %}"
+            {% if total_w != 100 %}title="Total weightage must be 100%"{% endif %}>
+      Submit for Approval →
+    </button>
+  </form>
+  {% if total_w != 100 %}
+  <span style="color:var(--warn);font-size:0.82rem;">⚠ Weightage must total 100% before submitting (currently {{ total_w }}%)</span>
+  {% endif %}
+</div>
+{% elif sheet.sheet_status == 'submitted' %}
+<div class="card" style="margin-top:1.5rem;border-color:rgba(245,197,66,0.3);background:rgba(245,197,66,0.05);">
+  <span style="color:var(--yellow);">⏳ Submitted — Awaiting manager approval. You cannot edit goals at this stage.</span>
+</div>
+{% elif sheet.sheet_status == 'approved' %}
+<div class="card" style="margin-top:1.5rem;border-color:rgba(34,201,122,0.3);background:rgba(34,201,122,0.05);">
+  <span style="color:var(--green);">✅ Approved & Locked — Contact your admin to make any changes.</span>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card" style="text-align:center;padding:3rem;">
+  <div style="font-size:2rem;margin-bottom:1rem;">📋</div>
+  <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:0.5rem;">No Goal Sheet Found</div>
+  <div style="color:var(--muted);font-size:0.85rem;">Contact your administrator to create a goal sheet for this cycle.</div>
+</div>
+{% endif %}
+
+<script>
+const total = {{ total_w }};
+function updateBar(val) {
+  const newTotal = total + parseInt(val || 0);
+  document.getElementById('preview').textContent = newTotal + '%';
+  const bar = document.getElementById('wbar');
+  bar.style.width = Math.min(newTotal, 100) + '%';
+  bar.className = newTotal > 100 ? 'over' : newTotal === 100 ? 'full' : '';
+}
+</script>
+{% endblock %}

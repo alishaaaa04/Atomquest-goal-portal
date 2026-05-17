@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+  <a href="/dashboard" style="color:var(--muted);font-size:0.83rem;text-decoration:none;">← Back to Team</a>
+</div>
+<div class="page-title">{{ emp.name }}'s Goals</div>
+<div class="page-sub">{{ emp.dept }} · Sheet Status:
+  <span class="pill pill-{{ sheet.sheet_status if sheet else 'draft' }}">{{ sheet.sheet_status if sheet else 'No Sheet' }}</span>
+</div>
+
+{% if sheet %}
+<!-- APPROVE / RETURN ACTIONS -->
+{% if sheet.sheet_status == 'submitted' %}
+<div class="card" style="margin-bottom:1.5rem;border-color:rgba(245,197,66,0.3);background:rgba(245,197,66,0.05);">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:0.25rem;">⏳ Awaiting Your Review</div>
+      <div style="font-size:0.83rem;color:var(--muted);">Review all goals below then approve or return for rework.</div>
+    </div>
+    <div style="display:flex;gap:0.75rem;">
+      <form method="POST" action="/manager/approve/{{ sheet.id }}">
+        <button class="btn btn-success">✓ Approve & Lock</button>
+      </form>
+      <details>
+        <summary><span class="btn btn-danger">✗ Return for Rework</span></summary>
+        <div class="card" style="margin-top:0.75rem;border-color:rgba(255,77,106,0.2);">
+          <form method="POST" action="/manager/return/{{ sheet.id }}">
+            <div class="form-group">
+              <label>Reason for returning</label>
+              <textarea name="reason" placeholder="Explain what needs to be changed..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger btn-sm">Return Goals</button>
+          </form>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- GOALS TABLE -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="section-title" style="margin-bottom:1rem;">Goal Details — Planned vs Actual</div>
+  <table>
+    <thead>
+      <tr><th>Goal</th><th>Thrust</th><th>UoM</th><th>Target</th><th>Q1</th><th>Q2</th><th>Weight</th><th>Score</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for g in sheet.goals %}
+      {% set sc = compute_score(g) %}
+      <tr>
+        <td>
+          <div style="font-weight:500;font-size:0.88rem;">{{ g.title }}</div>
+          <div style="font-size:0.73rem;color:var(--muted);">{{ g.description[:50] }}…</div>
+        </td>
+        <td><span class="tag" style="font-size:0.7rem;">{{ g.thrust }}</span></td>
+        <td style="font-size:0.78rem;text-transform:uppercase;color:var(--muted);">{{ g.uom }}</td>
+        <td style="font-family:monospace;">{{ g.target }}</td>
+        <td style="font-family:monospace;color:var(--muted);">{{ g.q1 }}</td>
+        <td style="font-family:monospace;color:var(--accent2);">{{ g.q2 }}</td>
+        <td><strong>{{ g.weightage }}%</strong></td>
+        <td>
+          <span style="font-family:'Syne',sans-serif;font-weight:700;
+            color:{% if sc >= 75 %}var(--green){% elif sc >= 50 %}var(--yellow){% else %}var(--danger){% endif %}">
+            {{ sc }}%
+          </span>
+        </td>
+        <td>
+          {% if g.status == 'On Track' %}<span class="pill pill-on-track">On Track</span>
+          {% elif g.status == 'Completed' %}<span class="pill pill-completed">Completed</span>
+          {% else %}<span class="pill pill-not-started">Not Started</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- CHECKIN MODULE -->
+<div class="card">
+  <div class="section-title" style="margin-bottom:1rem;">Q2 Check-in Comments</div>
+  {% if comments %}
+    {% for c in comments %}
+    <div style="border-left:3px solid var(--accent2);padding:0.75rem 1rem;margin-bottom:0.75rem;
+                background:rgba(0,212,170,0.05);border-radius:0 8px 8px 0;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem;">
+        <strong style="font-size:0.83rem;">{{ c.quarter }} — {{ c.manager }}</strong>
+        <span style="font-size:0.73rem;color:var(--muted);">{{ c.date }}</span>
+      </div>
+      <div style="font-size:0.83rem;color:var(--muted);">{{ c.comment }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">No check-in comments yet.</div>
+  {% endif %}
+
+  <details style="margin-top:0.5rem;">
+    <summary><span class="btn btn-primary btn-sm">+ Add Q2 Check-in Comment</span></summary>
+    <div style="margin-top:1rem;">
+      <form method="POST" action="/manager/checkin/{{ emp_id }}">
+        <div class="form-group">
+          <label>Comment / Feedback</label>
+          <textarea name="comment" placeholder="Document your discussion, observations, and guidance..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success btn-sm">Save Check-in</button>
+      </form>
+    </div>
+  </details>
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:3rem;">
+  <div style="color:var(--muted);">This employee has not created any goals yet.</div>
+</div>
+{% endif %}
+{% endblock %}

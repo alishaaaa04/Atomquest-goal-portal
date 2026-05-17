@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">Good day, {{ user.name.split()[0] }} 👋</div>
+<div class="page-sub">Here's your goal progress for FY 2025–26</div>
+
+<!-- STAT ROW -->
+<div class="grid4" style="margin-bottom:1.5rem;">
+  <div class="stat">
+    <div class="stat-label">Overall Score</div>
+    <div class="stat-value" style="color:{% if score >= 75 %}var(--green){% elif score >= 50 %}var(--yellow){% else %}var(--danger){% endif %}">{{ score }}%</div>
+    <div class="stat-sub">Weighted avg (Q2)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Goals</div>
+    <div class="stat-value">{{ sheet.goals|length if sheet else 0 }}<span style="font-size:1rem;color:var(--muted)">/8</span></div>
+    <div class="stat-sub">Active goals this cycle</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Sheet Status</div>
+    <div class="stat-value" style="font-size:1rem;padding-top:0.4rem;">
+      {% if sheet %}
+        <span class="pill pill-{{ sheet.sheet_status }}">{{ sheet.sheet_status }}</span>
+      {% else %}<span class="pill pill-draft">No Sheet</span>{% endif %}
+    </div>
+    <div class="stat-sub">Goal sheet state</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Check-ins Done</div>
+    <div class="stat-value">{{ comments|length }}</div>
+    <div class="stat-sub">Manager feedback received</div>
+  </div>
+</div>
+
+<!-- GOALS TABLE -->
+{% if sheet %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="section-header">
+    <div class="section-title">My Goals — Q2 Progress</div>
+    <div style="display:flex;gap:0.5rem;">
+      <a href="/goals" class="btn btn-outline btn-sm">Manage Goals</a>
+      <a href="/checkin" class="btn btn-primary btn-sm">Update Check-in</a>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Goal</th><th>Thrust Area</th><th>Target</th><th>Q2 Actual</th><th>Weightage</th><th>Progress</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in sheet.goals %}
+      {% set sc = compute_score(g) %}
+      <tr>
+        <td>
+          <div style="font-weight:500;">{{ g.title }}</div>
+          <div style="font-size:0.75rem;color:var(--muted);">{{ g.description[:60] }}...</div>
+        </td>
+        <td><span class="tag">{{ g.thrust }}</span></td>
+        <td style="font-family:monospace;">{{ g.target }}</td>
+        <td style="font-family:monospace;color:var(--accent2);">{{ g.q2 }}</td>
+        <td><strong>{{ g.weightage }}%</strong></td>
+        <td style="min-width:120px;">
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <div class="progress-wrap" style="flex:1;">
+              <div class="progress-fill {% if sc >= 75 %}fill-green{% elif sc >= 50 %}fill-yellow{% else %}fill-red{% endif %}" style="width:{{ [sc,100]|min }}%"></div>
+            </div>
+            <span style="font-size:0.78rem;width:36px;text-align:right;">{{ sc }}%</span>
+          </div>
+        </td>
+        <td>
+          {% if g.status == 'On Track' %}<span class="pill pill-on-track">On Track</span>
+          {% elif g.status == 'Completed' %}<span class="pill pill-completed">Completed</span>
+          {% else %}<span class="pill pill-not-started">Not Started</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- MANAGER COMMENTS -->
+{% if comments %}
+<div class="card">
+  <div class="section-title" style="margin-bottom:1rem;">Manager Check-in Comments</div>
+  {% for c in comments %}
+  <div style="border-left:3px solid var(--accent2);padding:0.75rem 1rem;margin-bottom:0.75rem;background:rgba(0,212,170,0.05);border-radius:0 8px 8px 0;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;">
+      <strong style="font-size:0.85rem;">{{ c.quarter }} Check-in — {{ c.manager }}</strong>
+      <span style="font-size:0.75rem;color:var(--muted);">{{ c.date }}</span>
+    </div>
+    <div style="font-size:0.85rem;color:var(--muted);">{{ c.comment }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% else %}
+<div class="card" style="text-align:center;padding:3rem;">
+  <div style="font-size:2rem;margin-bottom:1rem;">🎯</div>
+  <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:0.5rem;">No Goals Yet</div>
+  <div style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Start creating your goals for this cycle.</div>
+  <a href="/goals" class="btn btn-primary">Create Goals →</a>
+</div>
+{% endif %}
+{% endblock %}

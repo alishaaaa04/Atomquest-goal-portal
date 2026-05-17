@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">Q2 Check-in</div>
+<div class="page-sub">Update your actual achievements for Q2 (July – September 2025)</div>
+
+{% if sheet and sheet.sheet_status == 'approved' %}
+<form method="POST" action="/checkin/save">
+  {% for g in sheet.goals %}
+  {% set sc = compute_score(g) %}
+  <div class="card" style="margin-bottom:1rem;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+      <div style="flex:1;">
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+          <span class="tag">{{ g.thrust }}</span>
+          <span style="font-size:0.72rem;color:var(--muted);background:var(--border);padding:0.2rem 0.5rem;border-radius:4px;">{{ g.uom|upper }}</span>
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;">{{ g.title }}</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">{{ g.description }}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Current Score</div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;
+          color:{% if sc >= 75 %}var(--green){% elif sc >= 50 %}var(--yellow){% else %}var(--danger){% endif %}">
+          {{ sc }}%
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);">Weightage: {{ g.weightage }}%</div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="grid2" style="margin-top:0.75rem;">
+      <div>
+        <label style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Planned Target</label>
+        <div style="font-size:1.4rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--text);">{{ g.target }}</div>
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Q2 Actual Achievement</label>
+        <input type="number" name="actual_{{ g.id }}" value="{{ g.q2 }}" step="any"
+               style="font-size:1.1rem;font-weight:600;color:var(--accent2);">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:1rem;margin-bottom:0;">
+      <label>Goal Status</label>
+      <select name="status_{{ g.id }}">
+        <option value="Not Started" {% if g.status == 'Not Started' %}selected{% endif %}>Not Started</option>
+        <option value="On Track" {% if g.status == 'On Track' %}selected{% endif %}>On Track</option>
+        <option value="Completed" {% if g.status == 'Completed' %}selected{% endif %}>Completed</option>
+      </select>
+    </div>
+
+    <div class="progress-wrap" style="margin-top:0.75rem;height:4px;">
+      <div class="progress-fill {% if sc >= 75 %}fill-green{% elif sc >= 50 %}fill-yellow{% else %}fill-red{% endif %}"
+           style="width:{{ [sc,100]|min }}%"></div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+    <button type="submit" class="btn btn-primary">Save Q2 Check-in ✓</button>
+    <a href="/dashboard" class="btn btn-outline">Cancel</a>
+  </div>
+</form>
+
+{% elif sheet and sheet.sheet_status != 'approved' %}
+<div class="card" style="text-align:center;padding:3rem;border-color:rgba(245,197,66,0.3);">
+  <div style="font-size:2rem;margin-bottom:1rem;">⏳</div>
+  <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:0.5rem;">Goals Not Yet Approved</div>
+  <div style="color:var(--muted);font-size:0.85rem;">Your manager needs to approve your goals before you can log achievements.</div>
+  <a href="/goals" class="btn btn-outline" style="margin-top:1.5rem;">View Goals →</a>
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:3rem;">
+  <div style="color:var(--muted);">No goal sheet found. Create your goals first.</div>
+</div>
+{% endif %}
+{% endblock %}

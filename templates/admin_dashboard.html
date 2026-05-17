@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">Admin Dashboard</div>
+<div class="page-sub">Organization-wide goal tracking overview · FY 2025–26</div>
+
+<!-- COMPLETION STATS -->
+<div class="grid4" style="margin-bottom:1.5rem;">
+  <div class="stat">
+    <div class="stat-label">Goal Setting</div>
+    <div class="stat-value" style="color:var(--accent);">{{ completion.goal_setting }}/{{ completion.total }}</div>
+    <div class="stat-sub">Submitted or approved</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Q1 Check-ins</div>
+    <div class="stat-value" style="color:var(--green);">{{ completion.q1_checkin }}/{{ completion.total }}</div>
+    <div class="stat-sub">Completed</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Q2 Check-ins</div>
+    <div class="stat-value" style="color:var(--green);">{{ completion.q2_checkin }}/{{ completion.total }}</div>
+    <div class="stat-sub">Completed</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Active Cycle</div>
+    <div class="stat-value" style="font-size:1.1rem;padding-top:0.4rem;">FY 25–26</div>
+    <div class="stat-sub">Q2 Window Open</div>
+  </div>
+</div>
+
+<!-- ALL EMPLOYEE SHEETS -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="section-header">
+    <div class="section-title">All Employee Goal Sheets</div>
+    <a href="/admin/report" class="btn btn-primary btn-sm">📊 View Report</a>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Employee</th><th>Dept</th><th>Goals</th><th>Status</th><th>Q2 Score</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for s in sheets %}
+      <tr>
+        <td><strong>{{ s.owner_name }}</strong></td>
+        <td style="color:var(--muted);font-size:0.83rem;">{{ s.dept }}</td>
+        <td>{{ s.goals_count }}</td>
+        <td><span class="pill pill-{{ s.status }}">{{ s.status }}</span></td>
+        <td>
+          <span style="font-family:'Syne',sans-serif;font-weight:700;
+            color:{% if s.score >= 75 %}var(--green){% elif s.score >= 50 %}var(--yellow){% else %}var(--muted){% endif %}">
+            {{ s.score }}%
+          </span>
+        </td>
+        <td>
+          {% if s.status == 'approved' %}
+          <form method="POST" action="/admin/unlock/{{ s.id }}" style="display:inline;">
+            <button class="btn btn-warn btn-sm">🔓 Unlock</button>
+          </form>
+          {% else %}
+          <span style="font-size:0.78rem;color:var(--muted);">No action needed</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- AUDIT LOG -->
+<div class="card">
+  <div class="section-title" style="margin-bottom:1rem;">Audit Trail</div>
+  <table>
+    <thead>
+      <tr><th>Timestamp</th><th>Changed By</th><th>Action</th><th>Entity</th><th>Detail</th></tr>
+    </thead>
+    <tbody>
+      {% for log in audit %}
+      <tr>
+        <td style="font-family:monospace;font-size:0.78rem;color:var(--muted);">{{ log.timestamp }}</td>
+        <td style="font-size:0.83rem;font-weight:500;">{{ log.user }}</td>
+        <td>
+          <span style="font-size:0.78rem;padding:0.2rem 0.5rem;border-radius:4px;
+            background:rgba(79,142,255,0.1);color:var(--accent);">{{ log.action }}</span>
+        </td>
+        <td style="font-size:0.83rem;">{{ log.entity }}</td>
+        <td style="font-size:0.78rem;color:var(--muted);">{{ log.detail }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

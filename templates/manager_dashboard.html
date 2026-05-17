@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">Team Overview</div>
+<div class="page-sub">Review and approve your team's goals · {{ user.name }}</div>
+
+<div class="grid3" style="margin-bottom:1.5rem;">
+  <div class="stat">
+    <div class="stat-label">Team Size</div>
+    <div class="stat-value">{{ team|length }}</div>
+    <div class="stat-sub">Direct reports</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Pending Approval</div>
+    <div class="stat-value" style="color:var(--yellow);">{{ team|selectattr('status','equalto','submitted')|list|length }}</div>
+    <div class="stat-sub">Awaiting your review</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Approved</div>
+    <div class="stat-value" style="color:var(--green);">{{ team|selectattr('status','equalto','approved')|list|length }}</div>
+    <div class="stat-sub">Goals locked</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-title" style="margin-bottom:1.25rem;">Team Members</div>
+  {% for member in team %}
+  <div style="display:flex;align-items:center;justify-content:space-between;
+              padding:1rem;border:1px solid var(--border);border-radius:10px;margin-bottom:0.75rem;
+              background:rgba(255,255,255,0.01);transition:background 0.2s;"
+       onmouseover="this.style.background='rgba(255,255,255,0.03)'"
+       onmouseout="this.style.background='rgba(255,255,255,0.01)'">
+    <div style="display:flex;align-items:center;gap:1rem;flex:1;">
+      <div style="width:42px;height:42px;border-radius:50%;background:var(--accent);opacity:0.8;
+                  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;">
+        {{ member.name[0] }}
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:0.95rem;">{{ member.name }}</div>
+        <div style="font-size:0.78rem;color:var(--muted);">
+          {{ member.sheet.goals|length if member.sheet else 0 }} goals &nbsp;·&nbsp;
+          Q2 Score: <strong style="color:var(--accent2);">{{ member.score }}%</strong>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <span class="pill pill-{{ member.status.replace(' ','-') }}">{{ member.status }}</span>
+      {% if member.sheet %}
+      <a href="/manager/review/{{ member.uid }}" class="btn btn-outline btn-sm">
+        {% if member.status == 'submitted' %}Review ›{% else %}View ›{% endif %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

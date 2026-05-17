@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AtomQuest — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0f14; --surface:#161a23; --card:#1e2330; --border:#2a3040; --accent:#4f8eff; --text:#e8ecf4; --muted:#6b7590; --green:#22c97a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif;
+         min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-wrap { width: 100%; max-width: 420px; padding: 1rem; }
+  .brand { text-align: center; margin-bottom: 2.5rem; }
+  .brand h1 { font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800; letter-spacing: -1px; }
+  .brand span { color: var(--accent); }
+  .brand p { color: var(--muted); font-size: 0.85rem; margin-top: 0.4rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; }
+  .card h2 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem; margin-bottom: 1.5rem; }
+  .form-group { margin-bottom: 1.1rem; }
+  label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  input { width: 100%; padding: 0.65rem 0.9rem; background: var(--bg); border: 1px solid var(--border);
+          border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; transition: border-color 0.2s; }
+  input:focus { outline: none; border-color: var(--accent); }
+  .btn { width: 100%; padding: 0.7rem; background: var(--accent); color: #fff; border: none;
+         border-radius: 8px; font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700;
+         cursor: pointer; margin-top: 0.5rem; transition: background 0.2s; }
+  .btn:hover { background: #3a7aee; }
+  .error { background: rgba(255,77,106,0.12); border: 1px solid rgba(255,77,106,0.3); color: #ff4d6a;
+           padding: 0.65rem 1rem; border-radius: 8px; font-size: 0.83rem; margin-bottom: 1rem; }
+  .demo-section { margin-top: 1.5rem; }
+  .demo-section p { font-size: 0.78rem; color: var(--muted); text-align: center; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .demo-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; }
+  .demo-btn {
+    display: block; text-align: center; padding: 0.6rem 0.5rem;
+    border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 600;
+    border: 1px solid var(--border); transition: all 0.2s;
+  }
+  .demo-btn.emp  { color: #4f8eff; border-color: rgba(79,142,255,0.3); background: rgba(79,142,255,0.08); }
+  .demo-btn.mgr  { color: #00d4aa; border-color: rgba(0,212,170,0.3);  background: rgba(0,212,170,0.08);  }
+  .demo-btn.adm  { color: #ff7b47; border-color: rgba(255,123,71,0.3); background: rgba(255,123,71,0.08); }
+  .demo-btn:hover { filter: brightness(1.2); }
+  .creds { font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; }
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="brand">
+    <h1>Atom<span>Quest</span></h1>
+    <p>Goal Setting & Tracking Portal</p>
+  </div>
+  <div class="card">
+    <h2>Sign In</h2>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <form method="POST">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="e.g. emp1, mgr1, admin1" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" required>
+      </div>
+      <button class="btn" type="submit">Sign In →</button>
+    </form>
+    <div class="demo-section">
+      <p>Quick Demo Access</p>
+      <div class="demo-btns">
+        <a href="/switch/employee" class="demo-btn emp">👤 Employee<br><span class="creds">emp1 / emp123</span></a>
+        <a href="/switch/manager"  class="demo-btn mgr">👔 Manager<br><span class="creds">mgr1 / mgr123</span></a>
+        <a href="/switch/admin"    class="demo-btn adm">🛡 Admin<br><span class="creds">admin1 / admin123</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
